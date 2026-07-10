@@ -1,0 +1,444 @@
+<?php
+
+class SubMenuItem
+{
+    private string $texto;
+    private string $enlace;
+    private string $icono;
+
+    public function __construct(string $texto, string $enlace = "#", string $icono = "•")
+    {
+        $this->texto  = $texto;
+        $this->enlace = $enlace;
+        $this->icono  = $icono;
+    }
+
+    public function render(): string
+    {
+        return '
+            <a href="' . htmlspecialchars($this->enlace) . '" 
+               class="w3-bar-item w3-button w3-hover-blue submenu-item">
+                <span class="w3-margin-right">' . $this->icono . '</span>' . htmlspecialchars($this->texto) . '
+            </a>';
+    }
+}
+
+class MenuPrincipal
+{
+    private string $titulo;
+    private string $icono;
+    private array $submenus = [];
+    private string $idPanel;
+
+    public function __construct(string $titulo, string $icono, string $idPanel)
+    {
+        $this->titulo  = $titulo;
+        $this->icono   = $icono;
+        $this->idPanel = $idPanel;
+    }
+
+    public function agregarSubMenu(SubMenuItem $item): void
+    {
+        $this->submenus[] = $item;
+    }
+
+    public function render(): string
+    {
+        $html = '
+        <button onclick="toggleSubmenu(\'' . $this->idPanel . '\')" 
+                class="w3-bar-item w3-button w3-hover-blue w3-left-align menu-principal">
+            <span class="w3-margin-right">' . $this->icono . '</span>' . htmlspecialchars($this->titulo) . '
+            <span class="w3-right">▾</span>
+        </button>
+        <div id="' . $this->idPanel . '" class="w3-hide submenu-container">';
+
+        foreach ($this->submenus as $sub) {
+            $html .= $sub->render();
+        }
+
+        $html .= '</div>';
+
+        return $html;
+    }
+}
+
+class BarraLateral
+{
+    private string $nombreClinica;
+    private string $nombreAdmin;
+    private string $logoTexto;
+    private array $menus = [];
+
+    public function __construct(string $nombreClinica, string $nombreAdmin, string $logoTexto)
+    {
+        $this->nombreClinica = $nombreClinica;
+        $this->nombreAdmin   = $nombreAdmin;
+        $this->logoTexto     = $logoTexto;
+    }
+
+    public function agregarMenu(MenuPrincipal $menu): void
+    {
+        $this->menus[] = $menu;
+    }
+
+    private function renderIdentidad(): string
+    {
+        return '
+        <div class="w3-card w3-white w3-margin-bottom identidad-panel">
+            <div class="w3-center w3-padding-24">
+                <div class="logo-circulo w3-center">
+                    <span>' . htmlspecialchars($this->logoTexto) . '</span>
+                </div>
+                <h3 class="w3-margin-top w3-margin-bottom-0">' . htmlspecialchars($this->nombreClinica) . '</h3>
+                <p class="w3-text-grey w3-small">Sistema de Gestión Veterinaria</p>
+                <hr>
+                <div class="w3-row">
+                    <div class="w3-col s3">
+                        <i class="w3-xlarge">👤</i>
+                    </div>
+                    <div class="w3-col s9 w3-left-align">
+                        <p class="w3-margin-bottom-0"><b>' . htmlspecialchars($this->nombreAdmin) . '</b></p>
+                        <p class="w3-text-grey w3-small">Administrador</p>
+                    </div>
+                </div>
+            </div>
+        </div>';
+    }
+
+    public function render(): string
+    {
+        $html = '<div class="w3-sidebar w3-bar-block w3-white w3-collapse w3-top w3-large barra-lateral" 
+                      style="z-index:3;width:260px;" id="mySidebar">';
+
+        $html .= $this->renderIdentidad();
+
+        $html .= '<div class="w3-card w3-white menus-panel">';
+
+        foreach ($this->menus as $menu) {
+            $html .= '<div class="w3-bar-block menu-bloque">' . $menu->render() . '</div>';
+        }
+
+        $html .= '</div>';
+        $html .= '<div class="w3-hide-large w3-hide-medium w3-padding-16"></div>';
+        $html .= '</div>';
+
+        return $html;
+    }
+}
+
+class CampoFormulario
+{
+    private string $etiqueta;
+    private string $nombre;
+    private string $tipo;
+    private string $columnas;
+    private string $placeholder;
+
+    public function __construct(string $etiqueta, string $nombre, string $tipo = "text", string $columnas = "s6", string $placeholder = "")
+    {
+        $this->etiqueta    = $etiqueta;
+        $this->nombre      = $nombre;
+        $this->tipo        = $tipo;
+        $this->columnas    = $columnas;
+        $this->placeholder = $placeholder;
+    }
+
+    public function render(): string
+    {
+        return '
+        <div class="w3-half w3-container w3-margin-bottom">
+            <label class="w3-text-grey"><b>' . htmlspecialchars($this->etiqueta) . '</b></label>
+            <input class="w3-input w3-border w3-round" type="' . $this->tipo . '" 
+                   name="' . $this->nombre . '" 
+                   placeholder="' . htmlspecialchars($this->placeholder) . '">
+        </div>';
+    }
+}
+
+class FormularioRegistroPacientes
+{
+    private array $campos = [];
+    private string $etiquetaObservaciones = "Alergias / Observaciones";
+
+    public function agregarCampo(CampoFormulario $campo): void
+    {
+        $this->campos[] = $campo;
+    }
+
+    public function render(): string
+    {
+        $html = '
+        <div class="w3-card w3-white w3-padding-24 w3-margin-bottom" id="registro-pacientes">
+            <h2 class="w3-border-bottom w3-padding-16">
+                🐾 Registro de Pacientes
+            </h2>
+            <form>
+                <div class="w3-row-padding">';
+
+        foreach ($this->campos as $campo) {
+            $html .= $campo->render();
+        }
+
+        $html .= '
+                    <div class="w3-container w3-margin-bottom">
+                        <label class="w3-text-grey"><b>' . htmlspecialchars($this->etiquetaObservaciones) . '</b></label>
+                        <textarea class="w3-input w3-border w3-round w3-textarea" name="observaciones" 
+                                  rows="4" placeholder="Ingrese alergias conocidas u observaciones médicas..."></textarea>
+                    </div>
+                </div>
+
+                <div class="w3-padding-16 w3-right-align">
+                    <button type="reset" class="w3-button w3-round w3-border w3-margin-right">
+                        ✖ Limpiar
+                    </button>
+                    <button type="submit" class="w3-button w3-round w3-blue">
+                        💾 Guardar Paciente
+                    </button>
+                </div>
+            </form>
+        </div>';
+
+        return $html;
+    }
+}
+
+class TarjetaResumen
+{
+    public function __construct(
+        private string $titulo,
+        private string $valor,
+        private string $icono,
+        private string $color
+    ) {}
+
+    public function render(): string
+    {
+        return '
+        <div class="w3-quarter w3-container w3-margin-bottom">
+            <div class="w3-card w3-padding w3-white tarjeta-resumen">
+                <div class="w3-row">
+                    <div class="w3-col s4">
+                        <div class="icono-circulo ' . $this->color . '">' . $this->icono . '</div>
+                    </div>
+                    <div class="w3-col s8 w3-right-align">
+                        <p class="w3-large w3-margin-bottom-0"><b>' . htmlspecialchars($this->valor) . '</b></p>
+                        <p class="w3-small w3-text-grey">' . htmlspecialchars($this->titulo) . '</p>
+                    </div>
+                </div>
+            </div>
+        </div>';
+    }
+}
+
+class DashboardVeterinario
+{
+    private BarraLateral $barraLateral;
+    private FormularioRegistroPacientes $formulario;
+    private array $tarjetas = [];
+
+    public function __construct(BarraLateral $barraLateral, FormularioRegistroPacientes $formulario)
+    {
+        $this->barraLateral = $barraLateral;
+        $this->formulario   = $formulario;
+    }
+
+    public function agregarTarjeta(TarjetaResumen $tarjeta): void
+    {
+        $this->tarjetas[] = $tarjeta;
+    }
+
+    private function renderTarjetas(): string
+    {
+        $html = '<div class="w3-row-padding">';
+        foreach ($this->tarjetas as $tarjeta) {
+            $html .= $tarjeta->render();
+        }
+        $html .= '</div>';
+        return $html;
+    }
+
+    public function render(): string
+    {
+        ob_start();
+        ?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Administrativo Veterinario</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+                         <!-- W3.CSS Framework -->
+                     <!-- link para habilitar W3.CSS -->
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    
+    <style>
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            background-color: #f1f3f6;
+        }
+        .barra-lateral {
+            border-right: 1px solid #e0e0e0;
+            overflow-y: auto;
+            height: 100%;
+        }
+        .contenido-principal {
+            margin-left: 260px;
+        }
+        .logo-circulo {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1a73e8, #4fa3ff);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 22px;
+            margin: 0 auto;
+        }
+        .menu-principal {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .submenu-item {
+            padding-left: 48px !important;
+            font-size: 14px;
+            color: #555 !important;
+        }
+        .icono-circulo {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+        }
+        .tarjeta-resumen {
+            border-left: 4px solid #1a73e8;
+        }
+        .w3-margin-bottom-0 { margin-bottom: 0 !important; }
+        header.w3-bar {
+            margin-left: 260px;
+        }
+        @media (max-width: 992px) {
+            .barra-lateral { display: none; }
+            .contenido-principal, header.w3-bar { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<?= $this->barraLateral->render() ?>
+
+<header class="w3-bar w3-white w3-card" style="z-index:2;">
+    <span class="w3-bar-item w3-large"><b>🐶 Panel Administrativo</b></span>
+    <span class="w3-bar-item w3-right w3-text-grey">Bienvenido, Administrador</span>
+</header>
+
+<div class="contenido-principal w3-padding-24">
+
+    <h1 class="w3-margin-bottom">Panel General</h1>
+    <p class="w3-text-grey w3-margin-bottom-24">
+        Resumen general de las actividades de la clínica veterinaria.
+    </p>
+
+    <?= $this->renderTarjetas() ?>
+
+    <?= $this->formulario->render() ?>
+
+    <div class="w3-card w3-white w3-padding-16 w3-margin-bottom">
+        <h4>Módulos del Sistema</h4>
+        <p class="w3-text-grey w3-small">
+            Utilice el menú lateral para navegar entre Mascotas, Cirugías, Vacunación, Farmacia,
+            Facturación y Configuración.
+        </p>
+    </div>
+
+</div>
+
+<script>
+    function toggleSubmenu(id) {
+        var panel = document.getElementById(id);
+        if (panel.className.indexOf("w3-show") === -1) {
+            panel.className = panel.className.replace("w3-hide", "w3-show");
+        } else {
+            panel.className = panel.className.replace("w3-show", "w3-hide");
+        }
+    }
+</script>
+
+</body>
+</html>
+        <?php
+        return ob_get_clean();
+    }
+}
+
+// --- Barra lateral con identidad ---
+$barra = new BarraLateral("Clínica Veterinaria San Roque", "Dra. Ana Martínez", "SR");
+
+// --- Menú: Mascotas ---
+$menuMascotas = new MenuPrincipal("Mascotas", "🐾", "panelMascotas");
+$menuMascotas->agregarSubMenu(new SubMenuItem("Lista de Mascotas", "#lista-mascotas"));
+$menuMascotas->agregarSubMenu(new SubMenuItem("Registro de Pacientes", "#registro-pacientes"));
+$menuMascotas->agregarSubMenu(new SubMenuItem("Actualizar Datos de Mascota", "#actualizar-mascota"));
+$barra->agregarMenu($menuMascotas);
+
+// --- Menú: Cirugías ---
+$menuCirugias = new MenuPrincipal("Cirugías", "🩺", "panelCirugias");
+$menuCirugias->agregarSubMenu(new SubMenuItem("Calendario de Cirugías", "#calendario-cirugias"));
+$menuCirugias->agregarSubMenu(new SubMenuItem("Programar Cirugía", "#programar-cirugia"));
+$menuCirugias->agregarSubMenu(new SubMenuItem("Seguimiento Postoperatorio", "#seguimiento-postop"));
+$barra->agregarMenu($menuCirugias);
+
+// --- Menú: Vacunación ---
+$menuVacunacion = new MenuPrincipal("Vacunación", "💉", "panelVacunacion");
+$menuVacunacion->agregarSubMenu(new SubMenuItem("Historial de Vacunación", "#historial-vacunacion"));
+$menuVacunacion->agregarSubMenu(new SubMenuItem("Registrar Nueva Vacuna", "#registrar-vacuna"));
+$menuVacunacion->agregarSubMenu(new SubMenuItem("Próximas Vacunas", "#proximas-vacunas"));
+$barra->agregarMenu($menuVacunacion);
+
+// --- Menú: Farmacia ---
+$menuFarmacia = new MenuPrincipal("Farmacia", "💊", "panelFarmacia");
+$menuFarmacia->agregarSubMenu(new SubMenuItem("Inventario de Farmacia", "#inventario-farmacia"));
+$menuFarmacia->agregarSubMenu(new SubMenuItem("Entrada de Medicamentos", "#entrada-medicamentos"));
+$menuFarmacia->agregarSubMenu(new SubMenuItem("Medicamentos por Vencer", "#medicamentos-vencer"));
+$barra->agregarMenu($menuFarmacia);
+
+// --- Menú: Facturación ---
+$menuFacturacion = new MenuPrincipal("Facturación", "🧾", "panelFacturacion");
+$menuFacturacion->agregarSubMenu(new SubMenuItem("Nueva Factura", "#nueva-factura"));
+$menuFacturacion->agregarSubMenu(new SubMenuItem("Historial de Facturas", "#historial-facturas"));
+$menuFacturacion->agregarSubMenu(new SubMenuItem("Pagos Pendientes", "#pagos-pendientes"));
+$barra->agregarMenu($menuFacturacion);
+
+// --- Menú: Configuración ---
+$menuConfiguracion = new MenuPrincipal("Configuración", "⚙️", "panelConfiguracion");
+$menuConfiguracion->agregarSubMenu(new SubMenuItem("Datos de la Clínica", "#datos-clinica"));
+$menuConfiguracion->agregarSubMenu(new SubMenuItem("Usuarios del Sistema", "#usuarios-sistema"));
+$menuConfiguracion->agregarSubMenu(new SubMenuItem("Cerrar Sesión", "#cerrar-sesion"));
+$barra->agregarMenu($menuConfiguracion);
+
+// --- Formulario de Registro de Pacientes ---
+$formulario = new FormularioRegistroPacientes();
+$formulario->agregarCampo(new CampoFormulario("Nombre de la Mascota", "nombre_mascota", "text", "s6", "Ej. Firulais"));
+$formulario->agregarCampo(new CampoFormulario("Especie", "especie", "text", "s6", "Ej. Canino, Felino"));
+$formulario->agregarCampo(new CampoFormulario("Raza", "raza", "text", "s6", "Ej. Labrador"));
+$formulario->agregarCampo(new CampoFormulario("Peso (kg)", "peso", "number", "s6", "Ej. 12.5"));
+$formulario->agregarCampo(new CampoFormulario("DNI del Propietario", "dni_propietario", "text", "s6", "Ej. 0801-1990-01234"));
+
+// --- Dashboard principal ---
+$dashboard = new DashboardVeterinario($barra, $formulario);
+$dashboard->agregarTarjeta(new TarjetaResumen("Pacientes Registrados", "128", "🐾", "w3-blue"));
+$dashboard->agregarTarjeta(new TarjetaResumen("Cirugías Programadas", "5", "🩺", "w3-green"));
+$dashboard->agregarTarjeta(new TarjetaResumen("Vacunas Pendientes", "17", "💉", "w3-orange"));
+$dashboard->agregarTarjeta(new TarjetaResumen("Facturas Pendientes", "9", "🧾", "w3-red"));
+
+echo $dashboard->render();
+ 
+// --- ESTO NO TIENE FUNCIONALIDAD, SOLO ES PARA VIZUALIZAR ---
